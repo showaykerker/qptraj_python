@@ -4,5 +4,5 @@
 
 A Python version of [EdXian/Quadratic_Programming](https://github.com/EdXian/Quadratic_Programming)
 
-![](https://github.com/showaykerker/qptraj_python/blob/master/img/qptraj.gif)
+![](https://github.com/showaykerker/qptraj_python/blob/master/img/qptest.gif)
 
