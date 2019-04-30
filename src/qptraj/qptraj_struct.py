@@ -112,7 +112,7 @@ class trajectory_profile:
 		self._time = new_time
 
 	def __str__(self):
-		return '%f, %f, %f, %f' % (self.pos, self.vel, self.acc, self.time)
+		return 'pos=%s, vel=%s, acc=%s, time=%f' % (str(self.pos), str(self.vel), str(self.acc), self.time)
 
 
 class segments:

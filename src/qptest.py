@@ -26,13 +26,14 @@ def main():
 	p1 = qpt.trajectory_profile()
 	p2 = qpt.trajectory_profile()
 	p3 = qpt.trajectory_profile()
+	p4 = qpt.trajectory_profile()
 	data = [] # list of trajectory_profile
 
 	p1.pos = np.array([1, 0, 0])
 	p1.vel = np.array([0, 0, 0])
 	p1.acc = np.array([0, 0, 0])
 
-	p2.pos = np.array([0, 3, 0])
+	p2.pos = np.array([-1.3, 3.2, 0])
 	p2.vel = np.array([-0.3, -0.2, 0])
 	p2.acc = np.array([-0.1, -0.3, 0])
 
@@ -40,14 +41,19 @@ def main():
 	p3.vel = np.array([0.3, -0.1, 0])
 	p3.acc = np.array([0.3, 0.2, 0])
 
-	path.append(qpt.segments(p1, p2, 1.5))
-	path.append(qpt.segments(p2, p3, 1.5))
-	path.append(qpt.segments(p3, p1, 1.5))
+	p4.pos = np.array([1, -1, 0])
+	p4.vel = np.array([0.3, 0.2, 0])
+	p4.acc = np.array([-0.1, 0.1, 0])
 
-	data = plan.get_profile(path, 0, 0.01)
+	path.append(qpt.segments(p1, p2, 3.))
+	path.append(qpt.segments(p2, p3, 3.))
+	path.append(qpt.segments(p3, p4, 3.))
+	path.append(qpt.segments(p4, p1, 3.))
+
+	data = plan.get_profile(path, 2.0, 0.02)
 	max_ = len(data)
 
-	for i in range(max_): rospy.loginfo("\tpos %d: %s" % (i, data[i].pos.transpose()) )
+	#for i in range(max_): rospy.loginfo("\tpos %d: %s" % (i, data[i]) )
 
 	for i in range(100):
 		pub_rate.sleep();
@@ -72,6 +78,7 @@ def main():
 		pos_pub.publish(pos)
 
 		count += 1
+
 		pub_rate.sleep()
 
 

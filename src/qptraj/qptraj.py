@@ -6,7 +6,6 @@ from numpy.polynomial import polynomial as poly
 from cvxopt import matrix, solvers
 
 
-
 class qptrajectory:
 	def __init__(self): pass
 	
@@ -17,11 +16,9 @@ class qptrajectory:
 		pass
 
 	def get_profile(self, seg:'list of class <segments>', time_interval:'float', dt:'float') -> 'list of class <trajectory_profile>':
-		t = 0.0
 		polyx = []; polyy = [] # double
 		tprofile = [] # list of trajectory_profile
 		d = np.array([0, 0, 0])
-		data = trajectory_profile(d, d, d, 0.01)
 
 		for s in seg:
 			begin = profile()
@@ -36,14 +33,16 @@ class qptrajectory:
 			end.V   = s.t_c.pos[1], s.t_c.vel[1], s.t_c.acc[1], 0
 			polyy = self.qpsolve(begin, end, s.time_interval)
 
-			t = 0
+
 
 			for j in range(int(s.time_interval/dt)+1):
+				data = trajectory_profile(d, d, d, 0.01)
 				t = dt * j
-				data.pos = np.array([ self.polynomial(polyx, t), self.polynomial(polyx, t), 0 ])
-				data.vel = np.array([ self.polynomial(polyx, t, 1), self.polynomial(polyx, t, 1), 0 ])
-				data.acc = np.array([ self.polynomial(polyx, t, 2), self.polynomial(polyx, t, 2), 0 ])
+				data.pos = np.array([ self.polynomial(polyx, t), self.polynomial(polyy, t), 0 ])
+				data.vel = np.array([ self.polynomial(polyx, t, 1), self.polynomial(polyy, t, 1), 0 ])
+				data.acc = np.array([ self.polynomial(polyx, t, 2), self.polynomial(polyy, t, 2), 0 ])
 				tprofile.append(data)
+				del data
 
 		return tprofile
 
@@ -72,6 +71,10 @@ class qptrajectory:
 		])
 		B = np.append(begin.V, end.V).reshape((8, 1))
 
+		# print(Q)
+		# print(A)
+		
+
 		G = matrix(np.zeros((1, 8)), tc='d')
 		h = matrix(np.zeros((1, 1)), tc='d')
 		p = matrix(np.zeros((8, 1)), tc='d')
@@ -80,6 +83,8 @@ class qptrajectory:
 		A = matrix(A, tc='d')
 		B = matrix(B, tc='d')
 
+
+
 		sol = solvers.qp(Q, p, G, h, A, B)
 
 		x = sol['x']
@@ -87,13 +92,10 @@ class qptrajectory:
 		return list(x)
 
 	def polynomial(self, data:'list of float', t:'double', der_times:'int'=0) -> 'double':
-		return poly.polyval(t, poly.polyder(data, der_times))
+		return poly.polyval(x=t, c=poly.polyder(c=data, m=der_times))
 
 
-if __name__ == '__main__':
-	p = position_type(np.array([1,2,3]))
-	qp = qptrajectory()
-	qp.get_profile(0, 0, 0)
+
 
 	
 
