@@ -1,7 +1,11 @@
-import qptraj as qpt
+#! /usr/bin/env python
+
+import qptraj.qptraj as qpt
 import numpy as np
 import rospy
 from geometry_msgs.msg import Point
+
+
 
 pos = Point()
 vel = Point()
@@ -43,9 +47,7 @@ def main():
 	data = plan.get_profile(path, 0, 0.01)
 	max_ = len(data)
 
-	for i in range(max_):
-		rospy.loginfo("===== pos %d =====" % i)
-		rospy.loginfo(str(data[i].pos.transpose()))
+	for i in range(max_): rospy.loginfo("\tpos %d: %s" % (i, data[i].pos.transpose()) )
 
 	for i in range(100):
 		pub_rate.sleep();

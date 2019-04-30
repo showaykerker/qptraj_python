@@ -1,6 +1,4 @@
 import numpy as np
-from numpy.polynomial import polynomial as poly
-from cvxopt import matrix, solvers
 
 class position_type:
 	def __init__(self, x=0, y=0, z=0, Vec=None):
@@ -80,7 +78,7 @@ class trajectory_profile:
 		self._pos = pos
 		self._vel = vel
 		self._acc = acc
-		self.time = time
+		self._time = time
 
 	@property
 	def pos(self): return self._pos
@@ -165,116 +163,4 @@ class profile:
 		val = np.array(val)
 		assert val.shape == (4,)
 		self._position, self._velocity, self._acceleration, self._jerk = self._V = val
-
-
-
-class qptrajectory:
-	def __init__(self): pass
-	
-	def set_waypoints(self, data:'class <waypoint>') -> None: # Seems not in use
-		pass
-
-	def get_position(self, time:'float') -> 'float': # Seems not in use
-		pass
-
-	def get_profile(self, seg:'list of class <segments>', time_interval:'float', dt:'float') -> 'list of class <trajectory_profile>':
-		t = 0.0
-		polyx = []; polyy = [] # double
-		tprofile = [] # list of trajectory_profile
-		d = np.array([0, 0, 0])
-		data = trajectory_profile(d, d, d, 0.01)
-
-		for s in seg:
-			begin = profile()
-			end = profile()
-			begin.V = s.b_c.pos[0], s.b_c.vel[0], s.b_c.acc[0], 0
-			end.V   = s.t_c.pos[0], s.t_c.vel[0], s.t_c.acc[0], 0
-			polyx = self.qpsolve(begin, end, s.time_interval)
-
-			begin.V.fill(0)
-			end.V.fill(0)
-			begin.V = s.b_c.pos[1], s.b_c.vel[1], s.b_c.acc[1], 0
-			end.V   = s.t_c.pos[1], s.t_c.vel[1], s.t_c.acc[1], 0
-			polyy = self.qpsolve(begin, end, s.time_interval)
-
-			t = 0
-
-			for j in range(int(s.time_interval/dt)+1):
-				t = dt * j
-				data.pos = np.array([ self.polynomial(polyx, t), self.polynomial(polyx, t), 0 ])
-				data.vel = np.array([ self.polynomial(polyx, t, 1), self.polynomial(polyx, t, 1), 0 ])
-				data.acc = np.array([ self.polynomial(polyx, t, 2), self.polynomial(polyx, t, 2), 0 ])
-				tprofile.append(data)
-
-		return tprofile
-
-
-	def qpsolve(self, begin:'class <profile>', end:'class <profile', time_interval:'float') -> 'list of float':
-
-		t = time_interval
-		#b0, b1, b2, b3 = 24, 120, 360, 840
-		b = np.array([24, 120, 360, 840], dtype=np.float32)
-		D = np.zeros((8, 8), dtype=np.float32)
-		d = np.zeros((4, 4), dtype=np.float32)
-		A = np.zeros((8, 8), dtype=np.float32)
-		B = np.zeros((8, 1), dtype=np.float32)
-
-		d = np.array([ np.array([ b[i] * b[j] * (t**(i+j+1)) / (i+j+1) for j in range(4)]) for i in range(4)], dtype=np.float32)
-		D[4:, 4:] = d.copy()
-		A = np.array([
-			[1, 0, 0, 0, 0, 0, 0, 0],
-			[0, 1, 0, 0, 0, 0, 0, 0],
-			[0, 0, 2, 0, 0, 0, 0, 0],
-			[0, 0, 0, 6, 0, 0, 0, 0],
-			[                    (t ** (i-0)) for i in range(8)],
-			[i *                 (t ** (i-1)) for i in range(8)],
-			[i * (i-1) *         (t ** (i-2)) for i in range(8)],
-			[i * (i-1) * (i-2) * (t ** (i-3)) for i in range(8)]
-		], dtype=np.float32)
-		B = np.append(begin.V, end.V).reshape((8, 1))
-
-
-		Q = np.zeros((8, 8))
-		A_ = np.zeros((8, 8))
-		B_ = np.zeros((8, 1))
-
-		G = matrix(np.zeros((1, 8)), tc='d')
-		h = matrix(np.zeros((1, 1)), tc='d')
-		p = matrix(np.zeros((8, 1)), tc='d')
-
-		for i in range(8):
-			for j in range(i+1):
-				Q[i][j] = D[j][i]
-
-		for i in range(8):
-			for j in range(8):
-				A_[i][j] = A[j][i]
-
-		for i in range(8):
-			B_[i] = B[i][0]
-
-		Q = matrix(Q, tc='d')
-		A_ = matrix(A_, tc='d')
-		B_ = matrix(B_, tc='d')
-
-		sol = solvers.qp(Q, p, G, h, A_, B_)
-
-		x = sol['x']
-
-		return list(x)
-
-	def polynomial(self, data:'list of float', t:'double', der_times:'int'=0) -> 'double':
-		return poly.polyval(t, poly.polyder(data, der_times))
-
-
-if __name__ == '__main__':
-	p = position_type(np.array([1,2,3]))
-	qp = qptrajectory()
-	qp.get_profile(0, 0, 0)
-
-	
-
-
-
-
 
