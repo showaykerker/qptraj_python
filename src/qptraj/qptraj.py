@@ -41,8 +41,8 @@ class qptrajectory:
 				data.pos = np.array([ self.polynomial(polyx, t), self.polynomial(polyy, t), 0 ])
 				data.vel = np.array([ self.polynomial(polyx, t, 1), self.polynomial(polyy, t, 1), 0 ])
 				data.acc = np.array([ self.polynomial(polyx, t, 2), self.polynomial(polyy, t, 2), 0 ])
-				tprofile.append(data)
-				del data
+				tprofile.append(data.copy())
+				
 
 		return tprofile
 

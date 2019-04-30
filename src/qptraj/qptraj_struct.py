@@ -1,6 +1,6 @@
 import numpy as np
 
-class position_type:
+class qpPosition:
 	def __init__(self, x=0, y=0, z=0, Vec=None):
 		assert Vec is None or (type(Vec) in [np.array, np.ndarray] and Vec.shape == (3,))
 		self._x, self._y, self._z = self._pos = np.array([x, y, z]) if Vec is None else Vec
@@ -32,9 +32,9 @@ class position_type:
 	def z(self, new_z): self._z = self._pos.z = new_z
 
 
-class pose_type:
-	def __init__(self, position=position_type()):
-		assert type(position) == position_type
+class qpPose:
+	def __init__(self, position=qpPosition()):
+		assert type(position) == qpPosition
 		self._position = position
 
 	@property
@@ -42,14 +42,14 @@ class pose_type:
 
 	@position.setter
 	def position(self, new_position): 
-		assert type(new_position) == position_type
+		assert type(new_position) == qpPosition
 		self._position = new_position
 
 
 class waypoint:
-	def __init__(self, time=0.0, pose=pose_type()):
+	def __init__(self, time=0.0, pose=qpPose()):
 		assert type(time) in [float, np.float32, np.float64]
-		assert type(pose) == pose_type
+		assert type(pose) == qpPose
 		self._time = time
 		self._pose = pose
 
@@ -66,7 +66,7 @@ class waypoint:
 
 	@pose.setter
 	def pose(self, new_pose):
-		assert type(new_pose) == pose_type
+		assert type(new_pose) == qpPose
 		self._pose = new_pose
 
 
@@ -110,6 +110,9 @@ class trajectory_profile:
 	@time.setter
 	def time(self, new_time):
 		self._time = new_time
+
+	def copy(self):
+		return trajectory_profile(pos=self.pos.copy(), vel=self.vel.copy(), acc=self.acc.copy(), time=self.time)
 
 	def __str__(self):
 		return 'pos=%s, vel=%s, acc=%s, time=%f' % (str(self.pos), str(self.vel), str(self.acc), self.time)
