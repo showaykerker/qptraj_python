@@ -9,16 +9,15 @@ from cvxopt import matrix, solvers
 class qptrajectory:
 	def __init__(self): pass
 	
-	def set_waypoints(self, data:'class <waypoint>') -> None: # Seems not in use
-		pass
+	# def set_waypoints(self, data:'class <waypoint>') -> None: # Seems not in use
+	# 	pass
 
 	def get_position(self, time:'float') -> 'float': # Seems not in use
 		pass
 
 	def get_profile(self, seg:'list of class <segments>', time_interval:'float', dt:'float') -> 'list of class <trajectory_profile>':
-		polyx = []; polyy = [] # double
+		polyx = []; polyy = []; polyyaw=[] # double
 		tprofile = [] # list of trajectory_profile
-		d = np.array([0, 0, 0])
 
 		for s in seg:
 			begin = profile()
@@ -33,12 +32,19 @@ class qptrajectory:
 			end.V   = s.t_c.pos[1], s.t_c.vel[1], s.t_c.acc[1], 0
 			polyy = self.qpsolve(begin, end, s.time_interval)
 
+			begin.V.fill(0)
+			end.V.fill(0)
+			begin.V = s.b_c.yaw[0], s.b_c.yaw[1], s.b_c.yaw[2], 0
+			end.V   = s.t_c.yaw[0], s.t_c.yaw[1], s.t_c.yaw[2], 0
+			polyyaw = self.qpsolve(begin, end, s.time_interval)
+
 			for j in range(int(s.time_interval/dt)+1):
-				data = trajectory_profile(d, d, d, 0.01)
+				data = trajectory_profile(time=0.01)
 				t = dt * j
 				data.pos = np.array([ self.polynomial(polyx, t), self.polynomial(polyy, t), 0 ])
 				data.vel = np.array([ self.polynomial(polyx, t, 1), self.polynomial(polyy, t, 1), 0 ])
 				data.acc = np.array([ self.polynomial(polyx, t, 2), self.polynomial(polyy, t, 2), 0 ])
+				data.yaw = np.array([ self.polynomial(polyyaw, t, 0), self.polynomial(polyyaw, t, 1), 0 ])
 				tprofile.append(data.copy())
 
 		return tprofile

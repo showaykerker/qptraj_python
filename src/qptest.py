@@ -3,19 +3,21 @@
 import qptraj.qptraj as qpt
 import numpy as np
 import rospy
-from geometry_msgs.msg import Point
+from geometry_msgs.msg import Point, Vector3
 
 
 
 pos = Point()
 vel = Point()
 acc = Point()
+yaw = Vector3()
 
 def main():
 	rospy.init_node('qptestpy', anonymous=True)
 	pos_pub = rospy.Publisher("/pos", Point, queue_size=10)
 	vel_pub = rospy.Publisher("/vel", Point, queue_size=10)
 	acc_pub = rospy.Publisher("/acc", Point, queue_size=10)
+	yaw_pub = rospy.Publisher("/yaw", Vector3, queue_size=10)
 	pub_rate = rospy.Rate(100)
 	rospy.loginfo("Trajectory Generator Start.")
 
@@ -32,18 +34,22 @@ def main():
 	p1.pos = np.array([1, 0, 0])
 	p1.vel = np.array([0, 0, 0])
 	p1.acc = np.array([0, 0, 0])
+	p1.yaw = np.array([0, 0, 0])
 
 	p2.pos = np.array([-1.3, 3.2, 0])
-	p2.vel = np.array([-0.3, -0.2, 0])
-	p2.acc = np.array([-0.1, -0.3, 0])
+	p2.vel = np.array([-0., -0., 0])
+	p2.acc = np.array([-0., -0., 0])
+	p2.yaw = np.array([5*np.pi/4, 0, 0])
 
 	p3.pos = np.array([-3, -1, 0])
-	p3.vel = np.array([0.3, -0.1, 0])
-	p3.acc = np.array([0.3, 0.2, 0])
+	p3.vel = np.array([0., -0., 0])
+	p3.acc = np.array([0., 0., 0])
+	p2.yaw = np.array([5*np.pi/2, 0, 0])
 
 	p4.pos = np.array([1, -1, 0])
-	p4.vel = np.array([0.3, 0.2, 0])
-	p4.acc = np.array([-0.1, 0.1, 0])
+	p4.vel = np.array([0., 0., 0])
+	p4.acc = np.array([-0., 0., 0])
+	p4.yaw = np.array([5*np.pi/4, 0, 0])
 
 	path.append(qpt.segments(p1, p2, 3.))
 	path.append(qpt.segments(p2, p3, 3.))
@@ -73,9 +79,14 @@ def main():
 			acc.y = data[count].acc[1]
 			acc.z = data[count].acc[2]
 
+			yaw.x = data[count].yaw[0]
+			yaw.y = data[count].yaw[1]
+			yaw.z = data[count].yaw[2]
+
 		acc_pub.publish(acc)
 		vel_pub.publish(vel)
 		pos_pub.publish(pos)
+		yaw_pub.publish(yaw)
 
 		count += 1
 

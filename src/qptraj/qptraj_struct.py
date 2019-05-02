@@ -31,7 +31,7 @@ class qpPosition:
 	@z.setter
 	def z(self, new_z): self._z = self._pos.z = new_z
 
-class qpOrientaion(qpPosition):
+class qpOrientation(qpPosition):
 	def __init__(self, x=0, y=0, z=0, w=1, Vec=None):
 		assert Vec is None or (type(Vec) in [np.array, np.ndarray] and Vec.shape == (4,))
 		self._x, self._y, self._z, self._w = self._ori = np.array([x, y, z, w]) if Vec is None else Vec
@@ -99,13 +99,15 @@ class waypoint:
 
 
 class trajectory_profile:
-	def __init__(self, pos=np.zeros((3,)), vel=np.zeros((3,)), acc=np.zeros((3,)), time=0.0):
+	def __init__(self, pos=np.zeros((3,)), vel=np.zeros((3,)), acc=np.zeros((3,)), yaw=np.zeros((3, )), time=0.0):
 		assert type(pos) in [np.array, np.ndarray] and pos.shape == (3,)
 		assert type(vel) in [np.array, np.ndarray] and vel.shape == (3,)
 		assert type(acc) in [np.array, np.ndarray] and acc.shape == (3,)
+		assert type(yaw) in [np.array, np.ndarray] and yaw.shape == (3,)
 		self._pos = pos
 		self._vel = vel
 		self._acc = acc
+		self._yaw = yaw
 		self._time = time
 
 	@property
@@ -117,6 +119,9 @@ class trajectory_profile:
 	@property
 	def acc(self): return self._acc
 	
+	@property
+	def yaw(self): return self._yaw
+
 	@property
 	def time(self): return self._time
 	
@@ -135,15 +140,20 @@ class trajectory_profile:
 		assert type(new_acc) in [np.array, np.ndarray] and new_acc.shape == (3,)
 		self._acc = new_acc
 
+	@yaw.setter
+	def yaw(self, new_yaw):
+		assert type(new_yaw) in [np.array, np.ndarray] and new_yaw.shape == (3,)
+		self._yaw = new_yaw
+
 	@time.setter
 	def time(self, new_time):
 		self._time = new_time
 
 	def copy(self):
-		return trajectory_profile(pos=self.pos.copy(), vel=self.vel.copy(), acc=self.acc.copy(), time=self.time)
+		return trajectory_profile(pos=self.pos.copy(), vel=self.vel.copy(), acc=self.acc.copy(), yaw=self.yaw.copy(), time=self.time)
 
 	def __str__(self):
-		return 'pos=%s, vel=%s, acc=%s, time=%f' % (str(self.pos), str(self.vel), str(self.acc), self.time)
+		return 'pos=%s, vel=%s, acc=%s, yaw=%s, time=%f' % (str(self.pos), str(self.vel), str(self.acc), str(self.yaw), self.time)
 
 
 class segments:
