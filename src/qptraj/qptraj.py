@@ -33,8 +33,6 @@ class qptrajectory:
 			end.V   = s.t_c.pos[1], s.t_c.vel[1], s.t_c.acc[1], 0
 			polyy = self.qpsolve(begin, end, s.time_interval)
 
-
-
 			for j in range(int(s.time_interval/dt)+1):
 				data = trajectory_profile(d, d, d, 0.01)
 				t = dt * j
@@ -42,7 +40,6 @@ class qptrajectory:
 				data.vel = np.array([ self.polynomial(polyx, t, 1), self.polynomial(polyy, t, 1), 0 ])
 				data.acc = np.array([ self.polynomial(polyx, t, 2), self.polynomial(polyy, t, 2), 0 ])
 				tprofile.append(data.copy())
-				
 
 		return tprofile
 
@@ -50,7 +47,6 @@ class qptrajectory:
 	def qpsolve(self, begin:'class <profile>', end:'class <profile', time_interval:'float') -> 'list of float':
 
 		t = time_interval
-		#b0, b1, b2, b3 = 24, 120, 360, 840
 		b = np.array([24, 120, 360, 840])
 		Q = np.zeros((8, 8))
 		d = np.zeros((4, 4))
@@ -71,10 +67,6 @@ class qptrajectory:
 		])
 		B = np.append(begin.V, end.V).reshape((8, 1))
 
-		# print(Q)
-		# print(A)
-		
-
 		G = matrix(np.zeros((1, 8)), tc='d')
 		h = matrix(np.zeros((1, 1)), tc='d')
 		p = matrix(np.zeros((8, 1)), tc='d')
@@ -82,8 +74,6 @@ class qptrajectory:
 		Q = matrix(Q, tc='d')
 		A = matrix(A, tc='d')
 		B = matrix(B, tc='d')
-
-
 
 		sol = solvers.qp(Q, p, G, h, A, B)
 

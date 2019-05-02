@@ -31,20 +31,48 @@ class qpPosition:
 	@z.setter
 	def z(self, new_z): self._z = self._pos.z = new_z
 
+class qpOrientaion(qpPosition):
+	def __init__(self, x=0, y=0, z=0, w=1, Vec=None):
+		assert Vec is None or (type(Vec) in [np.array, np.ndarray] and Vec.shape == (4,))
+		self._x, self._y, self._z, self._w = self._ori = np.array([x, y, z, w]) if Vec is None else Vec
+		
+	@property
+	def ori(self): return self._ori
+	
+	@property
+	def w(self): return self._w
+
+	@ori.setter
+	def ori(self, new_ori): 
+		assert (type(new_ori) in [np.array, np.ndarray] and new_pos.shape == (4,))
+		self._x, self._y, self._z, self._w = self._ori = new_ori.copy()
+
+	@w.setter
+	def w(self, new_w): self._w = self._ori.w = new_w
+
 
 class qpPose:
-	def __init__(self, position=qpPosition()):
+	def __init__(self, position=qpPosition(), orientation=qpOrientation()):
 		assert type(position) == qpPosition
+		assert type(orientation) == qpOrientation
 		self._position = position
+		self._orientation = orientation
 
 	@property
 	def position(self): return self._position
+
+	@property
+	def oritentation(self): return self._orientation
 
 	@position.setter
 	def position(self, new_position): 
 		assert type(new_position) == qpPosition
 		self._position = new_position
 
+	@oritentation.setter
+	def orientation(self, new_orientation): 
+		assert type(new_orientation) == qpOrientation
+		self._orientation = new_orientation
 
 class waypoint:
 	def __init__(self, time=0.0, pose=qpPose()):
