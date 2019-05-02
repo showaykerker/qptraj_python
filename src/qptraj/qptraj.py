@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import numpy as np
-from qptraj.qptraj_struct import *
+from qptraj.qpStruct import *
 from numpy.polynomial import polynomial as poly
 from cvxopt import matrix, solvers
 
@@ -15,36 +15,41 @@ class qptrajectory:
 	def get_position(self, time:'float') -> 'float': # Seems not in use
 		pass
 
-	def get_profile(self, seg:'list of class <segments>', time_interval:'float', dt:'float') -> 'list of class <trajectory_profile>':
-		polyx = []; polyy = []; polyyaw=[] # double
-		tprofile = [] # list of trajectory_profile
+	def get_profile(self, seg:'list of <class qpSegment>', time_interval:'float', dt:'float') -> 'list of class <qpTrajectoryProfile>':
+		tprofile = [] # list of qpTrajectoryProfile
 
 		for s in seg:
-			begin = profile()
-			end = profile()
-			begin.V = s.b_c.pos[0], s.b_c.vel[0], s.b_c.acc[0], 0
-			end.V   = s.t_c.pos[0], s.t_c.vel[0], s.t_c.acc[0], 0
+			begin = qpProfile()
+			end = qpProfile()
+			begin.V = s.b_c.x.copy()
+			end.V   = s.t_c.x.copy()
 			polyx = self.qpsolve(begin, end, s.time_interval)
 
 			begin.V.fill(0)
 			end.V.fill(0)
-			begin.V = s.b_c.pos[1], s.b_c.vel[1], s.b_c.acc[1], 0
-			end.V   = s.t_c.pos[1], s.t_c.vel[1], s.t_c.acc[1], 0
+			begin.V = s.b_c.y.copy()
+			end.V   = s.t_c.y.copy()
 			polyy = self.qpsolve(begin, end, s.time_interval)
 
 			begin.V.fill(0)
 			end.V.fill(0)
-			begin.V = s.b_c.yaw[0], s.b_c.yaw[1], s.b_c.yaw[2], 0
-			end.V   = s.t_c.yaw[0], s.t_c.yaw[1], s.t_c.yaw[2], 0
+			begin.V = s.b_c.z.copy()
+			end.V   = s.t_c.z.copy()
+			polyz = self.qpsolve(begin, end, s.time_interval)
+
+			begin.V.fill(0)
+			end.V.fill(0)
+			begin.V = s.b_c.yaw.copy()
+			end.V   = s.t_c.yaw.copy()
 			polyyaw = self.qpsolve(begin, end, s.time_interval)
 
 			for j in range(int(s.time_interval/dt)+1):
-				data = trajectory_profile(time=0.01)
+				data = qpTrajectoryProfile(time=0.01)
 				t = dt * j
-				data.pos = np.array([ self.polynomial(polyx, t), self.polynomial(polyy, t), 0 ])
-				data.vel = np.array([ self.polynomial(polyx, t, 1), self.polynomial(polyy, t, 1), 0 ])
-				data.acc = np.array([ self.polynomial(polyx, t, 2), self.polynomial(polyy, t, 2), 0 ])
-				data.yaw = np.array([ self.polynomial(polyyaw, t, 0), self.polynomial(polyyaw, t, 1), 0 ])
+				data.x = np.array([ self.polynomial(polyx, t, i_der) for i_der in range(4)])
+				data.y = np.array([ self.polynomial(polyy, t, i_der) for i_der in range(4)])
+				data.z = np.array([ self.polynomial(polyz, t, i_der) for i_der in range(4)])
+				data.yaw = np.array([ self.polynomial(polyyaw, t, i_der) for i_der in range(4)])
 				tprofile.append(data.copy())
 
 		return tprofile
