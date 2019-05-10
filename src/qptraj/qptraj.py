@@ -19,37 +19,29 @@ class qptrajectory:
 		tprofile = [] # list of qpTrajectoryProfile
 
 		for s in seg:
-			begin = qpProfile()
-			end = qpProfile()
-			begin.V = s.b_c.x.copy()
-			end.V   = s.t_c.x.copy()
+			begin = qpProfile(s.b_c.x, name='x')
+			end = qpProfile(s.t_c.x, name='x')
 			polyx = self.qpsolve(begin, end, s.time_interval)
 
-			begin.V.fill(0)
-			end.V.fill(0)
-			begin.V = s.b_c.y.copy()
-			end.V   = s.t_c.y.copy()
+			begin = qpProfile(s.b_c.y, name='y')
+			end = qpProfile(s.t_c.y, name='y')
 			polyy = self.qpsolve(begin, end, s.time_interval)
 
-			begin.V.fill(0)
-			end.V.fill(0)
-			begin.V = s.b_c.z.copy()
-			end.V   = s.t_c.z.copy()
+			begin = qpProfile(s.b_c.z, name='z')
+			end = qpProfile(s.t_c.z, name='z')
 			polyz = self.qpsolve(begin, end, s.time_interval)
 
-			begin.V.fill(0)
-			end.V.fill(0)
-			begin.V = s.b_c.yaw.copy()
-			end.V   = s.t_c.yaw.copy()
+			begin = qpProfile(s.b_c.yaw, name='yaw')
+			end = qpProfile(s.t_c.yaw, name='yaw')
 			polyyaw = self.qpsolve(begin, end, s.time_interval)
 
 			for j in range(int(s.time_interval/dt)+1):
 				data = qpTrajectoryProfile(time=0.01)
 				t = dt * j
-				data.x = np.array([ self.polynomial(polyx, t, i_der) for i_der in range(4)])
-				data.y = np.array([ self.polynomial(polyy, t, i_der) for i_der in range(4)])
-				data.z = np.array([ self.polynomial(polyz, t, i_der) for i_der in range(4)])
-				data.yaw = np.array([ self.polynomial(polyyaw, t, i_der) for i_der in range(4)])
+				data.x = np.array([ self.polynomial(polyx, t, i_derive) for i_derive in range(4)])
+				data.y = np.array([ self.polynomial(polyy, t, i_derive) for i_derive in range(4)])
+				data.z = np.array([ self.polynomial(polyz, t, i_derive) for i_derive in range(4)])
+				data.yaw = np.array([ self.polynomial(polyyaw, t, i_derive) for i_derive in range(4)])
 				tprofile.append(data.copy())
 
 		return tprofile
