@@ -6,6 +6,8 @@ import numpy as np
 import rospy
 from geometry_msgs.msg import Quaternion, Vector3, Point, Twist, Pose, PoseStamped
 from std_msgs.msg import Header
+import matplotlib.pyplot as plt
+from collections import deque
 
 pos = Point()
 vel = Point()
@@ -15,6 +17,10 @@ yaw = Vector3()
 
 dt = 0.05
 
+xy = deque(maxlen=3)
+
+# fig = plt.figure()
+# ax = fig.add_subplot(1,1,1)
 def main():
 	rospy.init_node('qptestpy', anonymous=True)
 	# pos_pub = rospy.Publisher("/qp/pos", Point, queue_size=10)
@@ -24,13 +30,17 @@ def main():
 	# yaw_pub = rospy.Publisher("/qp/yaw", Vector3, queue_size=10)
 
 	cmd_pub = rospy.Publisher("/hummingbird/command/pose", PoseStamped, queue_size=10)
+	pose_sub = rospy.Subscriber("/hummingbird/ground_truth/pose", Pose, cb)
+
 	pub_rate = rospy.Rate(1/dt)
+
 	rospy.loginfo("Trajectory Generator Start.")
 
 	count = 0
 
 	plan = qpt.qptrajectory()
 	path = [] # list of qpSegments
+
 
 	p0 = qpt.qpTrajectoryProfile()
 	p1 = qpt.qpTrajectoryProfile()
@@ -40,6 +50,7 @@ def main():
 	p5 = qpt.qpTrajectoryProfile()
 	p6 = qpt.qpTrajectoryProfile()
 	p7 = qpt.qpTrajectoryProfile()
+	ps = [p1, p2, p3, p4, p5, p6]
 	data = [] # list of qpTrajectoryProfile
 
 	p0.x   = np.array([0.0, 0, 0, 0])
@@ -70,12 +81,12 @@ def main():
 	p5.x   = np.array([-1.112663, 0, 0, 0])
 	p5.y   = np.array([6.132953, 0, 0, 0])
 	p5.z   = np.array([1.475779, 0, 0, 0])
-	p5.yaw = np.array([-2.416556+np.pi, 0, 0, 0])
+	p5.yaw = np.array([np.pi-2.416556, 0, 0, 0])
 	
 	p6.x   = np.array([-2.473461, 0, 0, 0])
 	p6.y   = np.array([4.946811, 0, 0, 0])
 	p6.z   = np.array([1.475779, 0, 0, 0])
-	p6.yaw = np.array([-2.424663+np.pi, 0, 0, 0])
+	p6.yaw = np.array([np.pi-2.424663, 0, 0, 0])
 
 	spd_div = 0.7
 	
@@ -90,17 +101,42 @@ def main():
 	path.append(qpt.qpSegments(p1, p2, 0.5))
 	path.append(qpt.qpSegments(p2, p3, 3.2))
 	path.append(qpt.qpSegments(p3, p4, 0.5))
-	path.append(qpt.qpSegments(p4, p5, 4.))
+	path.append(qpt.qpSegments(p4, p5, 3.))
 	path.append(qpt.qpSegments(p5, p6, 0.5))
+	#path.append(qpt.qpSegments(p6, p0, 3.5))
 	path.append(qpt.qpSegments(p6, p1, 3.5))
+
 
 	data = plan.get_profile(path, 2.5, dt)
 	max_ = len(data)
 
+	####################################################################
+	# Draw Planned Trajectory
+	# planned_traj = np.zeros((len(data),4))
+	# for i, d in enumerate(data):
+	# 	planned_traj[i] = d.copy().numpy()
+	# ax.scatter(planned_traj[:, 0], planned_traj[:, 1], c='b', marker='o', s=36)
+
+	# # Draw WayPoints
+	# defined_wp = np.zeros((len(ps), 3))
+	# for i, p in enumerate(ps):
+	# 	defined_wp[i] = p.x[0], p.y[0], p.yaw[0]
+	# ax.scatter(defined_wp[:, 0], defined_wp[:, 1], c='r', marker='*', s=200)
+	####################################################################
+
+	# plt.ion()
+	# plt.show()
+	# plt.pause(1)
+
+	
 	#for i in range(max_): rospy.loginfo("\tpos %d: %s" % (i, data[i]) )
 
 	for i in range(100):
 		pub_rate.sleep();
+
+	global xy
+
+	
 
 	while(not rospy.is_shutdown()):
 		if count >= max_: count = 0
@@ -132,6 +168,7 @@ def main():
 
 		#rospy.loginfo(msg)
 		rospy.loginfo('Target: %d'%count)
+		#print(xy[-1])
 		cmd_pub.publish(msg)
 		# acc_pub.publish(acc)
 		# vel_pub.publish(vel)
@@ -140,9 +177,27 @@ def main():
 		# yaw_pub.publish(yaw)
 
 		count += 1
-
+		####################################################################
+		# Draw Actual Trajectory
+		# if count % 3 == 0:
+		# 	ax.scatter(xy[-1][0], xy[-1][1], c='y', marker='.', s=56)
+		# 	plt.show()
+		# 	plt.pause(0.00001)
+		####################################################################
 		pub_rate.sleep()
 
 
+def cb(data):
+	global xy
+	Yaw = ut.toEularian(data.orientation.x, data.orientation.y, data.orientation.z, data.orientation.w)
+	xy.append(np.array([data.position.x, data.position.y]))
+	
+
+
 if __name__ == '__main__':
-	main()
+	try:
+		main()
+	except Exception as e: print(e)
+	finally:
+		plt.ioff()
+		plt.show()

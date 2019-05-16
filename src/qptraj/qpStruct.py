@@ -54,6 +54,10 @@ class qpTrajectoryProfile:
 	def copy(self):
 		return qpTrajectoryProfile(x=self.x.copy(), y=self.y.copy(), z=self.z.copy(), yaw=self.yaw.copy(), time=self.time)
 
+	def numpy(self, val_type='position'):
+		if val_type == 'position': return np.array([self.x[0], self.y[0], self.z[0], self.yaw[0]])
+		assert False
+
 	def __str__(self):
 		string = '<class qpTrajectoryProfile>\n'
 		string += '    |%6s     |%6s     |%6s     |%8s   |\n' % ('x', 'y', 'z', 'yaw')
