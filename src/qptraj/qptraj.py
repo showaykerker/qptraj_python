@@ -1,21 +1,74 @@
 #!/usr/bin/env python
 
 import numpy as np
-from qptraj.qpStruct import *
+import qptraj.qpStruct as qpst
 from numpy.polynomial import polynomial as poly
 from cvxopt import matrix, solvers
+
+class WayPoints:
+	"""
+		In xyzY mode,
+			pass a list of waypoints as numpy array
+			with shape (n_waypointss, 4)
+
+	"""
+
+	def __init__(self, wps=None, time_interval=0.1, dt=0.025, type_='xyzY'):
+		self.dt = dt
+		if wps is not None: self.read_wps(wps, time_interval, type_)
+
+	def read_wps(self, wps, time_interval=0.1, type_='xyzY'):
+		assert type(wps) == np.ndarray and wps.shape == (wps.shape[0], 4)
+		assert type(time_interval) in [np.ndarray, float]
+		assert type_ == 'xyzY'
+
+		self._wps = wps.copy()
+		self._n = wps.shape[0]
+		self._time_interval = np.zeros(self._n,)
+		
+		if type(time_interval) == float:
+			self._time_interval.fill(time_interval)
+		else:
+			assert hasattr(time_interval, 'shape')
+			assert time_interval.shape == self._time_interval.shape
+			self._time_interval = time_interval.copy()
+
+		return self._getTraj()
+
+
+	def _getTraj(self) -> 'list of class <qpTrajectoryProfile>':
+		assert hasattr(self, 'isSet')
+		solver = qptrajectory()
+		start_profile = None
+		end_profile = None
+		for i in range(self._n-1):
+
+			x_start = np.array([self._wps[i][0], 0, 0, 0])
+			y_start = np.array([self._wps[i][1], 0, 0, 0])
+			z_start = np.array([self._wps[i][2], 0, 0, 0])
+			Y_start = np.array([self._wps[i][3], 0, 0, 0])
+			x_end = np.array([self._wps[i+1][0], 0, 0, 0])
+			y_end = np.array([self._wps[i+1][1], 0, 0, 0])
+			z_end = np.array([self._wps[i+1][2], 0, 0, 0])
+			Y_end = np.array([self._wps[i+1][3], 0, 0, 0])
+
+			start_profile = qpst.qpTrajectoryProfile(x_start, y_start, z_start, Y_start) if i == 0 else end_profile.copy()
+			end_profile = qpst.qpTrajectoryProfile(x_end, y_end, z_end, Y_end)
+			seg = qpst.qpSegments(b_c=start_profile, t_c=end_profile, time_interval=self._time_interval[i])
+
+			tprofile = solver.get_profile([seg], dt=self.dt)
+			trajProfile.append(tprofile)
+
+		return trajProfile
+
+
 
 
 class qptrajectory:
 	def __init__(self): pass
-	
-	# def set_waypoints(self, data:'class <waypoint>') -> None: # Seems not in use
-	# 	pass
 
-	def get_position(self, time:'float') -> 'float': # Seems not in use
-		pass
-
-	def get_profile(self, seg:'list of <class qpSegment>', time_interval:'float', dt:'float') -> 'list of class <qpTrajectoryProfile>':
+	#def get_profile(self, seg:'list of <class qpSegment>', time_interval:'float', dt:'float') -> 'list of class <qpTrajectoryProfile>':
+	def get_profile(self, seg:'list of <class qpSegment>', dt:'float') -> 'list of class <qpTrajectoryProfile>':
 		tprofile = [] # list of qpTrajectoryProfile
 
 		for s in seg:
@@ -86,13 +139,3 @@ class qptrajectory:
 
 	def polynomial(self, data:'list of float', t:'double', der_times:'int'=0) -> 'double':
 		return poly.polyval(x=t, c=poly.polyder(c=data, m=der_times))
-
-
-
-
-	
-
-
-
-
-

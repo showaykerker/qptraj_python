@@ -107,7 +107,7 @@ def main():
 	path.append(qpt.qpSegments(p6, p1, 3.5))
 
 
-	data = plan.get_profile(path, 2.5, dt)
+	data = plan.get_profile(path, dt)
 	max_ = len(data)
 
 	####################################################################
@@ -128,7 +128,7 @@ def main():
 	# plt.show()
 	# plt.pause(1)
 
-	
+
 	#for i in range(max_): rospy.loginfo("\tpos %d: %s" % (i, data[i]) )
 
 	for i in range(100):
@@ -136,7 +136,7 @@ def main():
 
 	global xy
 
-	
+
 
 	while(not rospy.is_shutdown()):
 		if count >= max_: count = 0

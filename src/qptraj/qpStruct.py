@@ -8,15 +8,15 @@ class qpTrajectoryProfile:
 	@property
 	def x(self):
 		return self._x
-	
+
 	@property
 	def y(self):
 		return self._y
-	
+
 	@property
 	def z(self):
 		return self._z
-	
+
 	@property
 	def yaw(self):
 		return self._yaw
@@ -24,8 +24,8 @@ class qpTrajectoryProfile:
 	@property
 	def time(self):
 		return self._time
-	
-	
+
+
 	@x.setter
 	def x(self, val):
 		assert type(val) == np.ndarray and val.shape == (4,)
@@ -78,7 +78,7 @@ class qpSegments:
 	@property
 	def b_c(self):
 		return self._b_c
-	
+
 	@property
 	def t_c(self):
 		return self._t_c
@@ -86,12 +86,12 @@ class qpSegments:
 	@property
 	def time_interval(self):
 		return self._time_interval
-	
+
 	@b_c.setter
 	def b_c(self, val):
 		assert type(val) == qpTrajectoryProfile
 		self._b_c = val
-	
+
 	@t_c.setter
 	def t_c(self, val):
 		assert type(val) == qpTrajectoryProfile
@@ -127,7 +127,7 @@ class qpProfile:
 	@property
 	def name(self):
 		return self._name
-	
+
 	@V.setter
 	def V(self, val):
 		assert type(val) == np.ndarray and val.shape == (4,)
